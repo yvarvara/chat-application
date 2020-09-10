@@ -1,68 +1,11 @@
-:root {
-    --color-primary-light : #CFF2F5;
-    --color-primary: #85D4DB;
-    --color-primary-dark: #00838F;
-    --color-secondary: #FCA6A6;
-    --color-secondary-dark: #D46B6B;
-    --text-color-light: #828282;
-    --text-color-dark: #3A3A3A;
-}
-
-html {
-    box-sizing: border-box;
-}
-
-*, 
-*::before, 
-*::after {
-    box-sizing: inherit;
-    margin: 0;
-    padding: 0;
-}
-
 body {
     background: var(--color-primary-light); 
     font-family: 'Cambay', sans-serif;
 }
 
-button, 
-input, 
-select, 
-textarea {
-    font-family: inherit;
-    font-size: 100%;
-}
-
-img {
-    display: block;
-}
-
-textarea {
-    overflow: auto;
-}
-
-a {
-    font-weight: bold;
-}
-
-a:any-link {
-    text-decoration: none;
-    color: var(--color-secondary);
-}
-
-a:hover,
-a:active {
-    text-decoration: underline;
-}
-
 .logo {
     height: 3.5em;
     margin: 10vh auto;
-}
-
-.btn {
-    outline: none;
-    border: none;  
 }
 
 .container-main {
@@ -166,7 +109,7 @@ a:active {
 
 @media only screen and (min-width: 992px) {
     body {
-        background: var(--color-primary-light) url("login_register_background.svg") no-repeat fixed center; 
+        background: var(--color-primary-light) url("../images/login_register_background.svg") no-repeat fixed center; 
         background-size: contain;
         font-family: 'Cambay', sans-serif;
     }
