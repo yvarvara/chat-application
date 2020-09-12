@@ -205,8 +205,6 @@ div[contenteditable=true]:focus {
 
 .msg {
     max-width: 60%;
-    padding: 5px;
-    border-radius: 6px;
     list-style: none;
 }
 
@@ -225,11 +223,26 @@ div[contenteditable=true]:focus {
     background-color: white;
 }
 
+.msg-in time {
+    color: #C4C4C4;
+}
+
+.msg-in, 
+.msg-out > div {
+    padding: 5px;
+    border-radius: 6px;
+}
+
 .msg-out {
     align-self: flex-end;
+}
+
+.msg-out > div {
+    display: inline-block;
     background-color: #85D4DB;
 }
 
-.msg-in time {
-    color: #C4C4C4;
+.msg-out > i {
+    margin-right: 10px;
+    color: #85D4DB;
 }
