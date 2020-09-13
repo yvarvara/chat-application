@@ -46,6 +46,11 @@ textarea {
     font-size: 100%;
 }
 
+button {
+    outline: none;
+    border: none;  
+}
+
 img {
     display: block;
 }
@@ -66,9 +71,4 @@ a:any-link {
 a:hover,
 a:active {
     text-decoration: underline;
-}
-
-.btn {
-    outline: none;
-    border: none;  
 }
