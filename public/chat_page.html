@@ -8,13 +8,28 @@
         <link rel="stylesheet" href="styles/chat.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Cambay&display=swap" rel="stylesheet">
-        <script type="module" src="scripts/chat.js"></script>
+        <script src="scripts/chat.js"></script>
+        <script src="scripts/menu.js"></script>
     </head>
     <body>
         <header>
+            <div class="menu-icon" onclick="toggleMenu(this)">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <img class="logo" src="images/logo.svg" alt="Logo">
         </header>
         <main>
-            <div class="container">
+            <nav id="sideNav" class="side-nav">
+                <button><i class="fa fa-unlock fa-lg"></i>New public channel</button>
+                <button><i class="fa fa-lock fa-lg"></i>New private channel</button>
+                <button><i class="fa fa-cog fa-lg"></i>Settings</button>
+                <!-- <button><i class="fa fa-user-circle-o fa-lg"></i>Edit profile</button> -->
+                <!-- <button><i class="fa fa-moon-o fa-lg"></i>Night mode</button> -->
+                <button><i class="fa fa-sign-out fa-lg"></i>Log out</button>
+            </nav>
+            <div class="container" id="main">
                 <aside class="dialog-list-container">
                     <div class="search-bar">
                         <div class="search-input-wrapper">
