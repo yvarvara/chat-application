@@ -9,8 +9,23 @@ document.getElementById("menu").onclick = function toggleMenu() {
     let main = document.getElementById("main");
 
     if (sideNav.style.width == "0px" || sideNav.style.width == "") {
-        main.style.marginLeft = "15%";
-        sideNav.style.width = "15%";
+        if (window.matchMedia("(min-width: 1200px)").matches) {
+            main.style.marginLeft = "15%";
+            sideNav.style.width = "15%";
+        }
+        else if (window.matchMedia("(min-width: 992px)").matches) {
+            main.style.marginLeft = "20%";
+            sideNav.style.width = "20%";
+        } 
+        else if (window.matchMedia("(min-width: 768px)").matches) {
+            sideNav.style.width = "30%";
+        } 
+        else if (window.matchMedia("(min-width: 600px)").matches) {
+            sideNav.style.width = "40%";
+        } 
+        else {
+            sideNav.style.width = "100%";
+        }
     }
     else {
         main.style.marginLeft = "0";
