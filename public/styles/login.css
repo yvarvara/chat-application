@@ -1,0 +1,80 @@
+body {
+    background: var(--color-primary-light); 
+    font-family: 'Cambay', sans-serif;
+}
+
+.logo {
+    height: 3.5em;
+    margin: 10vh auto;
+}
+
+.container-main {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.form-wrapper {
+    width: 100%;
+    padding: 15%;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.form-login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5em;
+}
+
+.form-login p {
+    align-self: flex-end;
+    font-size: 0.8em;
+    color: var(--text-color-light);
+}
+
+@media only screen and (min-width: 400px) {
+    .container-main {
+        width: 90%;
+    }
+
+    .form-wrapper {
+        border-radius: 6px;
+    }
+}
+
+@media only screen and (min-width: 600px) {
+    .container-main {
+        width: 60%;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .container-main {
+        width: 50%;
+    }
+}
+
+@media only screen and (min-width: 992px) {
+    body {
+        background: var(--color-primary-light) url("../images/login_register_background.svg") no-repeat fixed center; 
+        background-size: contain;
+        font-family: 'Cambay', sans-serif;
+    }
+
+    .logo {
+        height: 4.1em;
+        margin: 0;
+    }
+
+    .container-main {
+        width: 40%;
+        margin: 15vh auto 0;
+    }
+}
+
+@media only screen and (min-width: 1200px) {
+    .container-main {
+        width: 30%;
+        max-width: 500px;
+    }
+}
