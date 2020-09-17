@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chat</title>
-        <link rel="stylesheet" href="styles/styles.css">
-        <link rel="stylesheet" href="styles/login.css">
-        <link href="https://fonts.googleapis.com/css2?family=Cambay&display=swap" rel="stylesheet">
-    </head>
-    <body>
-        <main>
-            <div class="container-main">
+let Register = {
+    render : async () => {
+        return /*html*/`
+        <main id="main-login">
+            <div class="container-login">
                 <img class="logo" src="images/logo.svg" alt="Logo">
                 <div class="form-wrapper">
                     <form class="form-login">
@@ -35,5 +27,10 @@
                 </div>
             </div>
         </main>
-    </body>
-</html>
+        `
+    },
+
+    afterRender : async () => {}
+}
+
+export default Register;

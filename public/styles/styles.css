@@ -10,7 +10,16 @@
 }
 
 html {
+    height: 100%;
     box-sizing: border-box;
+    font-family: 'Cambay', sans-serif;
+    color: var(--text-color-light);
+}
+
+body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 *, 
@@ -34,10 +43,6 @@ html {
     background: rgb(197, 197, 197);
 }
 
-body {
-    font-family: 'Cambay', sans-serif;
-}
-
 button, 
 input, 
 select, 
@@ -53,10 +58,6 @@ button {
 
 img {
     display: block;
-}
-
-textarea {
-    overflow: auto;
 }
 
 a {
@@ -97,7 +98,6 @@ a:active {
     position: absolute;
     top: 0;
     left: 0; 
-    color: var(--text-color-light);
     transition: 0.5s;
 }
 

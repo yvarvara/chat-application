@@ -1,6 +1,6 @@
-body {
+#main-login {
+    height: 100%;
     background: var(--color-primary-light); 
-    font-family: 'Cambay', sans-serif;
 }
 
 .logo {
@@ -8,7 +8,7 @@ body {
     margin: 10vh auto;
 }
 
-.container-main {
+.container-login {
     width: 100%;
     margin: 0 auto;
 }
@@ -29,36 +29,34 @@ body {
 .form-login p {
     align-self: flex-end;
     font-size: 0.8em;
-    color: var(--text-color-light);
 }
 
 @media only screen and (min-width: 400px) {
-    .container-main {
-        width: 90%;
-    }
-
     .form-wrapper {
         border-radius: 6px;
+    }
+
+    .container-login {
+        width: 90%;
     }
 }
 
 @media only screen and (min-width: 600px) {
-    .container-main {
+    .container-login {
         width: 60%;
     }
 }
 
 @media only screen and (min-width: 768px) {
-    .container-main {
+    .container-login {
         width: 50%;
     }
 }
 
 @media only screen and (min-width: 992px) {
-    body {
+    #main-login {
         background: var(--color-primary-light) url("../images/login_register_background.svg") no-repeat fixed center; 
         background-size: contain;
-        font-family: 'Cambay', sans-serif;
     }
 
     .logo {
@@ -66,14 +64,14 @@ body {
         margin: 0;
     }
 
-    .container-main {
+    .container-login {
         width: 40%;
         margin: 15vh auto 0;
     }
 }
 
 @media only screen and (min-width: 1200px) {
-    .container-main {
+    .container-login {
         width: 30%;
         max-width: 500px;
     }

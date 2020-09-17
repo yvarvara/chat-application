@@ -1,17 +1,5 @@
-html,
-body {
-    height: 100%;
-    color: var(--text-color-light);
-}
-
 main {
     height: calc(100% - 50px);
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
 }
 
 header {
@@ -51,7 +39,7 @@ header {
     transform: rotate(45deg) translate(-7px, -8px);
 }
 
-.logo {
+.logo-header {
     height: 2.8em;
     margin-top: 5px;
 }
@@ -86,7 +74,9 @@ header {
     margin: 0 10px;
 }
 
-#main {
+.container-main {
+    display: flex;
+    height: 100%;
     transition: margin-left .4s;
 }
 
@@ -100,11 +90,6 @@ header {
 
 .icon-btn:hover {
     color: var(--text-color-light);
-}
-
-.container {
-    display: flex;
-    height: 100%;
 }
 
 .search-bar {
@@ -471,10 +456,6 @@ input:checked + label:after {
 }
 
 @media only screen and (min-width: 992px) {
-    #main {
-        transition: margin-left .4s;
-    }
-
     .dialog-list-container {
         width: 25%;
     }
