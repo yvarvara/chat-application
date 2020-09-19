@@ -336,7 +336,6 @@ div[contenteditable=true]:focus {
 
 .modal-content {
     padding: 0 40px 40px;
-    color: initial;
 }
 
 .form-modal {
@@ -394,20 +393,21 @@ input:checked + label:after {
 	transform: translateX(-100%);
 }
 
-#settingsModal .modal-content {
+#settingsModalContainer .modal-content {
     display: flex;
     flex-direction: column;
     gap: 15px;
     padding: 20px 40px 40px;
+    color: initial;
     background-color: var(--color-primary-light);
 }
 
-#settingsModal .modal-content > button {
+#settingsModalContainer .modal-content > button {
     text-align: start;
     background-color: var(--color-primary-light);
 }
 
-#settingsModal .modal-content > button:hover {
+#settingsModalContainer .modal-content > button:hover {
     color: var(--text-color-light);
 }
 
