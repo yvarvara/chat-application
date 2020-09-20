@@ -22,17 +22,27 @@ let Home = {
     },
 
     afterRender : async () => {
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                console.log("logged in", user);
+
+                const headerContainer = document.querySelector("header");
+                const dialogListContainer = document.querySelector(".dialog-list-container");
+                const chatContainer = document.querySelector(".chat-container");
+        
+                Utils.render(headerContainer, Header);
+                Utils.render(dialogListContainer, DialogList);
+                Utils.render(chatContainer, Chat);
+            } else {
+                console.log("logged out");
+                window.location.href = "#/login";
+            }
+        });
+
         // window.onload = function() {
         //     document.getElementById("new-message").focus();
         // };
 
-        const headerContainer = document.querySelector("header");
-        const dialogListContainer = document.querySelector(".dialog-list-container");
-        const chatContainer = document.querySelector(".chat-container");
-
-        Utils.render(headerContainer, Header);
-        Utils.render(dialogListContainer, DialogList);
-        Utils.render(chatContainer, Chat);
     }
 }
 

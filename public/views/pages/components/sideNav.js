@@ -3,6 +3,7 @@ import PrivateChannelModal from "./privateChannelModal.js"
 import SettingsModal from "./settingsModal.js"
 import UsernameModal from "./usernameModal.js"
 import Utils from "../../../services/utils.js"
+import Auth from "../../../services/auth.js"
 
 let SideNav = {
     render : async () => {
@@ -10,7 +11,7 @@ let SideNav = {
             <button id="addPublicChannel"><i class="fa fa-unlock fa-lg"></i>New public channel</button>
             <button id="addPrivateChannel"><i class="fa fa-lock fa-lg"></i>New private channel</button>
             <button id="openSettings"><i class="fa fa-cog fa-lg"></i>Settings</button>
-            <button><i class="fa fa-sign-out fa-lg"></i>Log out</button>
+            <button id="logout"><i class="fa fa-sign-out fa-lg"></i>Log out</button>
 
             <div id="pubChannelModalContainer" class="modal-wrapper"></div>
             <div id="privChannelModalContainer" class="modal-wrapper"></div>
@@ -61,6 +62,11 @@ let SideNav = {
                     el.style.display = "none";
             }
         };
+
+         document.getElementById("logout").onclick = function() {
+             Auth.logout();
+         };
+
     }
 }
 
