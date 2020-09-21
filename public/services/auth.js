@@ -1,8 +1,16 @@
 let Auth = {
     register: (username, email, password) => {
         return firebase.auth().createUserWithEmailAndPassword(email, password).then((credentials) => {
-            console.log(credentials.user);
-            window.location.href = "/";
+            credentials.user.updateProfile({
+                displayName: username,
+                photoURL: "../images/Dark_Blue_Moon_Emoji_grande.png"
+            }).then(function() {
+                console.log(credentials.user);
+                window.location.href = "/";
+            }).catch(err => {
+                console.error(err.code);
+                console.error(err.message);
+            });
         });
     },
 
@@ -20,6 +28,10 @@ let Auth = {
             console.error(err.code);
             console.error(err.message);
         });
+    },
+
+    currentUser: () => {
+        return firebase.auth().currentUser;
     }
 }
 
