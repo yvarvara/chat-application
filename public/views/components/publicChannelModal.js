@@ -1,5 +1,5 @@
-import Auth from "../../../services/auth.js";
-import DB from "../../../services/db.js";
+import Auth from "../../services/auth.js";
+import DB from "../../services/db.js";
 
 let PublicChannelModal = {
     render : async () => {

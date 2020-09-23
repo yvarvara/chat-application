@@ -1,15 +1,11 @@
+import DB from "./db.js"
+
 let Auth = {
     register: (username, email, password) => {
         return firebase.auth().createUserWithEmailAndPassword(email, password).then((credentials) => {
-            credentials.user.updateProfile({
-                displayName: username,
-                photoURL: "../images/Dark_Blue_Moon_Emoji_grande.png"
-            }).then(function() {
-                console.log(credentials.user);
+
+            DB.addUser(credentials.user.uid, username, email).then(() => {
                 window.location.href = "/";
-            }).catch(err => {
-                console.error(err.code);
-                console.error(err.message);
             });
         });
     },
@@ -30,8 +26,8 @@ let Auth = {
         });
     },
 
-    currentUser: () => {
-        return firebase.auth().currentUser;
+    currentUserID: () => {
+        return firebase.auth().currentUser.uid;
     }
 }
 

@@ -1,4 +1,4 @@
-import DB from "../../../services/db.js"
+import DB from "../../services/db.js"
 
 let chatsList = null;
 let activeDialog = null;

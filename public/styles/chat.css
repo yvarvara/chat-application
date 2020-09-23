@@ -128,11 +128,26 @@ input[type="search"] {
     overflow-y: auto;
 }
 
+#notFound {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#searchResult {
+    display: none;
+}
+
+#searchResult > p {
+    width: 100%;
+    background-color: #ECECEC;
+}
+
 .dialog {
     display: flex;
     align-items: center;
     height: 60px;
     padding: 0 10px;
+    cursor: default;
     border-bottom: 1px solid #ECECEC;
 }
 
@@ -146,6 +161,13 @@ input[type="search"] {
     width: 56px;
     height: 56px;
     border-radius: 50%;
+}
+
+#userAvatar.avatar {
+    flex: 0 0 70px;
+    width: 70px;
+    height: 70px;
+    margin-right: 15px;
 }
 
 .dialog-info {
