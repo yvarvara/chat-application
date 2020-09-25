@@ -3,21 +3,29 @@ import Error404 from "./views/pages/error404.js"
 import Register from "./views/pages/register.js"
 import Login from "./views/pages/login.js"
 import Home from "./views/pages/home.js"
+import Chat from "./views/components/chat.js"
 
 const routes = {
     "/" : Home,
     "/login" : Login,
-    "/register" : Register
+    "/register" : Register,
+    "/chats/:id" : Chat,
+    "/channels/:id" : Chat,
+    "/users/:id" : Chat
 };
 
 const router = async () => {
-    const content = document.getElementById("pageContent");
+    let content = document.getElementById("pageContent");
 
     let request = Utils.parseUrl();
-    let parsedURL = (request.resource ? "/" + request.resource : "/") + (request.id ? "/:id" : "") + (request.verb ? "/" + request.verb : "");
+    let parsedURL = (request.resource ? "/" + request.resource : "/") + (request.id ? "/:id" : "");
 
     let page = routes[parsedURL] ? routes[parsedURL] : Error404;
 
+    const chatContainer = document.querySelector(".chat-container");
+    if (chatContainer && page === Chat) 
+        content = chatContainer;
+    
     await Utils.render(content, page);
 }
 

@@ -13,31 +13,27 @@ let DB = {
         }
     )},
 
-    async getUserByUsername(username) {
+    async getUsersByQuery(query) {
         let users = [];
-        const currentUserChatsIDs = await getCurrentUserChatsIDs();
 
         await firebase.database().ref("users").orderByChild("displayName")
-        .once("value").then(function(snapshot) {
-            snapshot.forEach(function (u) {
-                let user = u.val();
+        .once("value").then(async (snapshot) => {
+            const snap = snapshot.val();
 
-                if (user.displayName.startsWith(username)) {
-                    let f = true;
+            for (let uid in snap) {
+                if (snap[uid].displayName.startsWith(query) && 
+                !(await this.isUserInCurrentUserChats(uid)) &&
+                uid !== Auth.currentUserID()) {
 
-                    for (let id of currentUserChatsIDs) {
-                        if (id.startsWith(u.key) || id.endsWith(u.key)) {
-                            f = false;
-                            break;  
-                        }
-                    }
+                    const user = {
+                        uid: uid,
+                        displayName: snap[uid].displayName,
+                        photoURL: snap[uid].photoURL
+                    };
 
-                    if (f) {
-                        user.uid = u.key;
-                        users.push(user);
-                    }
+                    users.push(user);
                 }
-            });
+            }
         });
 
         return users;
@@ -53,41 +49,58 @@ let DB = {
         return user;
     },
 
-    async getUserChats(uid, userChatsIDs) {
+    async getCurrentUserChats() {
+        const userChatsIDs = await this.getCurrentUserChatsIDs();
         let userChats = [];
 
-        for (let uc in userChatsIDs) {
-            let chat = null;
-            await firebase.database().ref(`chats/${uc}`).once("value", function(snapshot) {
-                chat = snapshot.val();
-            });
+        if (userChatsIDs)
+            for (let id of userChatsIDs) {
+                let chat = await this.getChatInfoById(id);
 
-            let userChat = {
-                id: uc
-            };
+                if (!chat)
+                    continue;
 
-            if (chat.name) {
-                userChat.name = chat.name;
-                userChat.photoURL = chat.photoURL;
-            } else {
-                for (let m in chat.members) {
-                    if (m !== uid) {
-                        let peer = null;
-
-                        await firebase.database().ref(`users/${m}`).once("value", function(snapshot) {
-                            peer = snapshot.val();
-                        });
-
-                        userChat.name = peer.displayName;
-                        userChat.photoURL = peer.photoURL;
-                    }
-                }
+                chat.lastMessage = await DB.getChatLastMessage(chat.id); 
+                userChats.push(chat);
             }
 
-            userChats.push(userChat);
+        function compare(a, b) {
+            return a.timestamp > b.timestamp ? 1 :
+            a.timestamp < b.timestamp ? -1 : 0;
         }
 
+        userChats.sort(compare);
         return userChats;
+    },
+
+    async getCurrentUserChatsIDs() {
+        let userChatsIDs = [];
+    
+        await firebase.database().ref(`users/${Auth.currentUserID()}/chats`)
+        .once("value").then(function(snapshot) {
+            snapshot.forEach(function (c) {
+                userChatsIDs.push(c.key);
+            });
+        });
+    
+        return userChatsIDs;
+    },
+
+    async addUserChatsChildAddedListener(callback) {
+        firebase.database().ref(`users/${Auth.currentUserID()}/chats`)
+        .on("child_added", callback);
+    },
+
+    async isUserInCurrentUserChats(uid) {
+        const currentUserChatsIDs = await this.getCurrentUserChatsIDs();
+        
+        for (let id of currentUserChatsIDs) {
+            if (id.startsWith(uid) || id.endsWith(uid)) {
+                return true;
+            }
+        }
+
+        return false;
     },
 
     async updateUserInfo(uid, displayName, photoURL) {
@@ -103,69 +116,211 @@ let DB = {
 
     async addChat(memberA, memberB) {
         const chatID = (memberA > memberB) ? (memberA + memberB) : (memberB + memberA);
-        addChatMembers(chatID, [memberA, memberB]);
+        let updates = {};
+
+        updates[`chats/${chatID}/members/${memberA}`] = "";
+        updates[`chats/${chatID}/members/${memberB}`] = "";
+        updates[`users/${memberA}/chats/${chatID}`] = true
+        updates[`users/${memberB}/chats/${chatID}`] = true
+        
+        await firebase.database().ref().update(updates);
+        return chatID;
+    },
+
+    async getChatInfoById(id) {
+        let chat = null;
+
+        await firebase.database().ref(`chats/${id}`).orderByChild("timestamp")
+        .once("value").then(async (snapshot) => {
+            if (!snapshot.val())
+                return;
+
+            chat = snapshot.val();
+            chat.id = snapshot.key;
+
+            if (!chat.name) {
+                for (let m in chat.members) {
+                    if (m !== Auth.currentUserID()) {
+                        let user = await this.getUserInfo(m);
+                        chat.name = user.displayName;
+                        chat.photoURL = user.photoURL;
+
+                        break;
+                    }
+                }
+            }
+        });
+
+        return chat;
     },
 
     async addChannel(name, password, members) {
-        let chat = null;
         const photoURL = "../images/group_avatar.png";
+        let channel = {name, password, photoURL};
 
-        if (name && password)
-            chat = {name, password, photoURL};
-        else if (name) 
-            chat = {name, photoURL};
-
-        const chatID = await firebase.database().ref(`chats`).push(chat).key;
+        const channelID = await firebase.database().ref(`chats`).push(channel).key;
         
-        if (members)
-            addChatMembers(chatID, members);
+        if (members) {
+            for (let member of members) {
+                let updates = {};
+        
+                updates[`chats/${channelID}/members/${member}`] = "";
+                updates[`users/${member}/chats/${channelID}`] = true
+              
+                await firebase.database().ref().update(updates);
+            }
+        }
     },
 
-    async getChannelsByName(name) {
-        let channels = [];
-        const currentUserChatsIDs = await getCurrentUserChatsIDs();
+    async addChannelMember(uid, channelID) {
+        let updates = {};
 
-        await firebase.database().ref("chats").once("value")
-        .then(function(snapshot) {
-            snapshot.forEach(function (c) {
-                let channel = c.val();
-                
-                if (channel.name && channel.name.startsWith(name)) {
-                    if (!currentUserChatsIDs.includes(c.key)) {
-                        channel.id = c.key;
-                        delete channel.members;
-                        channels.push(channel);
-                    }
+        updates[`chats/${channelID}/members/${uid}`] = true;
+        updates[`users/${uid}/chats/${channelID}`] = true;
+
+        await firebase.database().ref().update(updates);
+    },
+
+    async getChannelsByQuery(query) {
+        let channels = [];
+
+        await firebase.database().ref("chats").orderByChild("name").
+        once("value").then(async (snapshot) => {
+            const snap = snapshot.val();
+
+            for (let cid in snap) {                
+                if (snap[cid].name && snap[cid].name.startsWith(query) && 
+                !(await this.isChannelInCurrentUserChats(cid))) {
+
+                    const channel = {
+                        id: cid,
+                        name: snap[cid].name,
+                        photoURL: snap[cid].photoURL
+                    } 
+
+                    channels.push(channel);
                 }
-            })
+            }
         });
 
         return channels;
+    },
+
+    async isChannelInCurrentUserChats(cid) {
+        const currentUserChatsIDs = await this.getCurrentUserChatsIDs();
+        
+        for (let id of currentUserChatsIDs) {
+            if (id === cid) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    async addMessage(ref, chatID, sender, content, timestamp) {
+        const message = { sender, content, timestamp };
+        await ref.set(message);
+
+        message.id = ref.key;
+        await this.updateLastReadMessage(chatID, message);
+        await firebase.database().ref(`chats/${chatID}/timestamp`).set(timestamp);
+
+        return ref.key;
+    },
+
+    async getMessageSender(chatID, messageID) {
+        let sender = null;
+
+        await firebase.database().ref(`messages/${chatID}/${messageID}/sender`)
+        .once("value", function(snapshot) {
+            sender = snapshot.val();
+        });
+
+        return sender;
+    },
+
+    async getChatLastMessage(chatID) {
+        let message = null;
+        
+        await firebase.database().ref(`messages/${chatID}`).limitToLast(1)
+        .once("value", function(snapshot) {
+            message = Object.values(snapshot.val())[0];
+            message.id = Object.keys(snapshot.val())[0];
+        });
+
+        return message;
+    },
+
+    async addChatMessagesChildAddedListener(chatID, callback) {
+        firebase.database().ref(`messages/${chatID}`).orderByChild("timestamp").
+        startAt(Date.now()).on("child_added", callback);
+    },
+
+    async getNewMessageRef(chatID) {
+        return await firebase.database().ref(`messages/${chatID}`).push();
+    },
+
+    async getMessages(chatID) {
+        let messages = [];
+
+        await firebase.database().ref(`messages/${chatID}`).once("value")
+        .then(function (snapshot) {
+            messages = snapshot.val();
+        })
+
+        return messages;
+    },
+
+    async updateLastReadMessage(chatID, message) {
+        let updates = {};
+        updates[`/chats/${chatID}/members/${Auth.currentUserID()}`] = message.id;
+        await firebase.database().ref().update(updates);
+    },
+
+    async getUserLastReadMessageID(chatID, uid) {
+        let messageID = "";
+
+        await firebase.database().ref(`chats/${chatID}/members/${uid}`)
+        .once("value", function(snapshot)  {
+            messageID = snapshot.val();
+        });
+
+        return messageID;
+    },
+
+    async getUnreadMessagesCount(chatID, uid) {
+        let lastReadMessageID = await this.getUserLastReadMessageID(chatID, uid);
+        let count = 0;
+
+        await firebase.database().ref(`messages/${chatID}`).orderByKey()
+        .startAt(lastReadMessageID).once("value").then(function(snapshot) {
+            snapshot.forEach(function(s) {
+                if (s.key !== lastReadMessageID)
+                    count++;
+            })
+        });
+
+        return count;
+    },
+
+    async addLastReadChangedListener(chatID, callback) {
+        firebase.database().ref(`chats/${chatID}/members`)
+        .on("child_changed", callback);
+    },
+
+    async getChatPeerID(chatID) {
+        let chatPeerID = null;
+
+        await firebase.database().ref(`chats/${chatID}/members`).once("value", function(snapshot) {
+            snapshot.forEach(s => {
+                if (s.key !== Auth.currentUserID())
+                    chatPeerID = s.key;
+            })
+        })
+
+        return chatPeerID;
     }
 };
-
-async function getCurrentUserChatsIDs() {
-    let userChatsIDs = [];
-
-    await firebase.database().ref(`users/${Auth.currentUserID()}/chats`)
-    .once("value").then(function(snapshot) {
-        snapshot.forEach(function (c) {
-            userChatsIDs.push(c.key);
-        });
-    });
-
-    return userChatsIDs;
-}
-
-async function addChatMembers(chatID, members) {
-    for (let member of members) {
-        let updates = {};
-
-        updates[`chats/${chatID}/members/${member}`] = true;
-        updates[`users/${member}/chats/${chatID}`] = true;
-      
-        await firebase.database().ref().update(updates);
-    }
-}
-
+ 
 export default DB

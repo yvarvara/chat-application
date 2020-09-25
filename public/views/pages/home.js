@@ -3,7 +3,6 @@ import Header from "../components/header.js";
 import DialogList from "../components/dialogList.js"
 import Chat from "../components/chat.js"
 import DB from "../../services/db.js"
-import Auth from "../../services/auth.js"
 
 let Home = {
     render : async () => {
@@ -24,29 +23,46 @@ let Home = {
     },
 
     afterRender : async () => {
-        firebase.auth().onAuthStateChanged(function(user) {
+        firebase.auth().onAuthStateChanged(async function(user) {
             if (user) {
                 const headerContainer = document.querySelector("header");
                 const dialogListContainer = document.querySelector(".dialog-list-container");
                 const chatContainer = document.querySelector(".chat-container");
-        
-                firebase.database().ref(`users/${Auth.currentUserID()}/chats`).on("value", async function(snapshot) {
-                    const chats = await DB.getUserChats(user.uid, snapshot.val());
-                    dialogListContainer.innerHTML = await DialogList.render(chats);
-                    await DialogList.afterRender();
-                });
 
                 Utils.render(headerContainer, Header);
                 Utils.render(chatContainer, Chat);
+                Utils.render(dialogListContainer, DialogList);
+
+                let init = false;
+                DB.addUserChatsChildAddedListener(async function(snapshot) {
+                    if (!init)
+                        return;
+
+                    const chatID = snapshot.key;
+                    const chat = await DB.getChatInfoById(chatID);
+                    chat.id = chatID;
+                    chat.lastMessage = await DB.getChatLastMessage(chatID);
+
+                    await DialogList.renderNewChat(chat);       
+                    await DialogList.afterNewChatRender(chatID);      
+                });
+
+                new Promise(async(resolve, reject) => {
+                    let chats = await DB.getCurrentUserChats();
+                    chats.forEach(async (chat) => {
+                        await DialogList.renderNewChat(chat);       
+                        await DialogList.afterNewChatRender(chat.id);
+                    });
+                    resolve(100);
+                }).then(() => {
+                    init = true;
+                });
+
+
             } else {
                 window.location.href = "#/login";
             }
         });
-
-        // window.onload = function() {
-        //     document.getElementById("new-message").focus();
-        // };
-
     }
 }
 
