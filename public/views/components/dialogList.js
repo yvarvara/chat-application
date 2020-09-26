@@ -224,12 +224,7 @@ function addSearchInputEventListener() {
             searchResultChannels.innerHTML = 
                 (channels.length > 0) ?
                 channels.map(channel => 
-                    `<li id="${channel.id}" class="dialog">
-                        <img class="avatar" src="${channel.photoURL}" alt="Avatar">
-                        <div class="dialog-info">
-                            <p class="username">${channel.name}</p>
-                        </div>
-                    </li>`
+                    searchResultDialog(channel.id, channel.name, channel.photoURL)
                 ).join('\n') : 
                 `<p class="not-found">No channels found</p>`;
 
@@ -238,12 +233,7 @@ function addSearchInputEventListener() {
             searchResultUsers.innerHTML =
                 (users.length > 0) ?
                 users.map(user =>
-                    `<li id="${user.uid}" class="dialog">
-                        <img class="avatar" src="${user.photoURL}" alt="Avatar">
-                        <div class="dialog-info">
-                            <p class="username">${user.displayName}</p>
-                        </div>
-                    </li>`
+                    searchResultDialog(user.uid, user.displayName, user.photoURL)
                 ).join('\n') :
                 `<p class="not-found">No users found</p>`;
 
@@ -266,11 +256,23 @@ function addDialogClickEventListener(el) {
         activeDialog = el;
         el.classList.add("active");
 
+        let isUser = await DB.isUserID(el.id);
+        let chatID = (isUser) ? Utils.getTwoUsersChatID(el.id, Auth.currentUserID()) : el.id;
+
+        let chat = await DB.getChatInfoById(chatID);
+        if (chat.password) {
+            let password = prompt("Enter chat password");
+            if (Utils.hashcode(password) !== chat.password) {
+                alert("Wrong password :(");
+                return;
+            }
+        }
+
         const photoURL = document.querySelector(`li[id="${el.id}"] .avatar`).src;
         const name = document.querySelector(`li[id="${el.id}"] .username`).innerHTML;
         Chat.setChatInfo({photoURL, name});
 
-        if (await DB.isUserID(el.id))
+        if (isUser)
             window.location.href = `#/users/${el.id}`
         else
             window.location.href = `#/channels/${el.id}`;
@@ -283,6 +285,15 @@ function addDialogsClickEventListener(id) {
     for (let el of dialogs) {
         addDialogClickEventListener(el);
     }
+}
+
+function searchResultDialog(id, name, photoURL) {
+    return `<li id="${id}" class="dialog">
+                <img class="avatar" src="${photoURL}" alt="Avatar">
+                <div class="dialog-info">
+                    <p class="username">${name}</p>
+                </div>
+            </li>`
 }
 
 function updateDialogLastMessage(userID, message) {

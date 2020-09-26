@@ -1,5 +1,6 @@
 import Auth from "../../services/auth.js";
 import DB from "../../services/db.js";
+import Utils from "../../services/utils.js";
 
 let PrivateChannelModal = {
     render : async () => {
@@ -42,7 +43,7 @@ let PrivateChannelModal = {
             const passwordConfirm = privateChannelForm.passwordConfirm.value;
 
             if (password === passwordConfirm) {
-                await DB.addChannel(name, password, [uid]);
+                await DB.addChannel(name, Utils.hashcode(password), [uid]);
                 document.getElementById("close_2").click();
                 document.getElementById("menu").click();
             } else {
