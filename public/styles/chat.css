@@ -345,6 +345,11 @@ div[contenteditable=true]:focus {
     color: #85D4DB;
 }
 
+.msg p.sender {
+    font-weight: bold;
+    color: #D46B6B;
+}
+
 .modal-wrapper {
     display: none; 
     width: 100%;

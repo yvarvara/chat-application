@@ -1,6 +1,18 @@
 {
   "rules": {
     ".read": "auth != null",
-    ".write": "auth != null"
+    ".write": "auth != null",
+    "messages": {
+      "$chat_id": {
+        ".indexOn" : "timestamp"
+      }
+    },
+    "chats":{
+      "$chat_id" : {
+        "members" : {
+        ".indexOn" : ".value"
+        }
+      }
+    }
   }
 }

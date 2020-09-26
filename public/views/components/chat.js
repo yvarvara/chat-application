@@ -35,7 +35,9 @@ let Chat = {
                 const timestamp = new Date(messages[id].timestamp);
                 const time = Utils.toTimeString(timestamp);
                 const datetime = timestamp.toISOString();
-    
+                
+                const senderName = (await DB.getUserInfo(messages[id].sender)).displayName;
+
                 const messageHTML = (messages[id].sender === uid) ?
                 `<li class="msg msg-out">
                     <div>
@@ -44,6 +46,13 @@ let Chat = {
                         </time>
                         <p>${content}</p>
                     </div>
+                </li>` : (request.resource === "channels") ?
+                `<li class="msg msg-in">
+                    <p class="sender">${senderName}</p>
+                    <time datetime="${datetime}">
+                        ${time}
+                    </time>
+                    <p>${content}</p>
                 </li>` :
                 `<li class="msg msg-in">
                     <time datetime="${datetime}">
@@ -150,15 +159,21 @@ let Chat = {
             return;
 
         const timestamp = new Date(msg.timestamp);
+        const senderName = (await DB.getUserInfo(msg.sender)).displayName;
 
         let message = document.createElement("li");
         message.classList.add("msg", "msg-in");
 
-        message.innerHTML = `
+        message.innerHTML = (request.resource === "users") ? `
             <time datetime="${timestamp.toISOString()}">
                 ${Utils.toTimeString(timestamp)}
             </time>
-            <p>${msg.content}</p>
+            <p>${msg.content}</p>` :
+            `<p class="sender">${senderName}</p>
+            <time datetime="${datetime}">
+                ${time}
+            </time>
+            <p>${content}</p>
         `;
 
         chatHistory.prepend(message);

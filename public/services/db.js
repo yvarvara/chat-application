@@ -325,7 +325,7 @@ let DB = {
  
         await firebase.database().ref(`chats/${channelID}/members`).orderByValue()
         .limitToLast(2).once("value", function(snapshot) {
-            lastReadMessageID = Object.values(snapshot.val())[0];
+            lastReadMessageID = Object.values(snapshot.val())[1];
         })
 
         return lastReadMessageID;

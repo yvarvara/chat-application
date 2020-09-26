@@ -119,11 +119,11 @@ let DialogList = {
 
         await DB.addLastReadChangedListener(chatID, async (snapshot) => {
             // my messages read
-            if (activeDialog && activeDialog.id === userID
-            && snapshot.key !== Auth.currentUserID()
+            if (snapshot.key !== Auth.currentUserID()
             && await DB.getMessageSender(chatID, snapshot.val()) ===
             Auth.currentUserID()) {
-                Chat.removeMessageStatusIcons();
+                if (activeDialog && activeDialog.id === userID)
+                    Chat.removeMessageStatusIcons();
 
                 let dialogInfoIcon = document.querySelector(`li[id="${userID}"] .dialog-info:nth-of-type(2) i`);
                 if (dialogInfoIcon)
@@ -262,6 +262,10 @@ function addDialogClickEventListener(el) {
         let chat = await DB.getChatInfoById(chatID);
         if (chat.password) {
             let password = prompt("Enter chat password");
+            
+            if (!password)
+                return;
+
             if (Utils.hashcode(password) !== chat.password) {
                 alert("Wrong password :(");
                 return;
