@@ -6,18 +6,23 @@ let Auth = {
 
             DB.addUser(credentials.user.uid, username, email).then(() => {
                 window.location.href = "/";
-            });
+            });            
         });
     },
 
     login: (email, password) => {
         return firebase.auth().signInWithEmailAndPassword(email, password).then((credentials) => {
-            console.log(credentials.user);
+            DB.addConnectionStateListener(credentials.user.uid);
             window.location.href = "/";
         });
     },
 
     logout: () => {
+        let uid = Auth.currentUserID();
+        let ref = firebase.database().ref(`users/${uid}/connection`);
+        ref.child("isConnected").set(false);
+        ref.child("lastOnline").set(firebase.database.ServerValue.TIMESTAMP);
+
         firebase.auth().signOut().then(() => {
             window.location.href = "/";
         }).catch(err => {
@@ -27,7 +32,9 @@ let Auth = {
     },
 
     currentUserID: () => {
-        return firebase.auth().currentUser.uid;
+        let curUser = firebase.auth().currentUser;
+        let uid = curUser ? curUser.uid : null;
+        return uid;
     }
 }
 

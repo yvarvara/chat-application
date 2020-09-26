@@ -61,7 +61,7 @@ let Chat = {
             <img class="avatar" src="${chat.photoURL}" alt="Avatar">
             <div class="dialog-info">
                 <p class="username">${chat.name}</p>
-                <p>online</p>
+                <p id="connState"></p>
             </div>
             <!-- <button class="icon-btn"><i class="fa fa-info-circle fa-2x"></i></button> -->
         </div>
@@ -85,6 +85,9 @@ let Chat = {
         if (!newMessageForm)
             return;
 
+        if (request.resource === "users")
+            await DB.getConnentionState(request.id);
+
         newMessageForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -107,7 +110,7 @@ let Chat = {
 
                 DB.addMessage(msgRef, chatID, Auth.currentUserID(), messageContent, timestamp.getTime())
                 .then((snap) => {
-                    let i = document.querySelector(`#${snap} i.fa-clock-o`);
+                    let i = document.querySelector(`li[id="${snap}"] i.fa-clock-o`);
                     if (i) 
                         i.className = "fa fa-circle";
                 });

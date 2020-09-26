@@ -305,8 +305,10 @@ let DB = {
 
     async getUnreadMessagesCount(chatID, uid) {
         let lastReadMessageID = await this.getUserLastReadMessageID(chatID, uid);
-        let count = 0;
+        if (!lastReadMessageID)
+            return 0;
 
+        let count = 0;
         await firebase.database().ref(`messages/${chatID}`).orderByKey()
         .startAt(lastReadMessageID).once("value").then(function(snapshot) {
             snapshot.forEach(function(s) {
@@ -331,6 +333,9 @@ let DB = {
 
     async getUnreadMessagesCountChannel(channelID) {
         let lastReadMessageID = await this.getChannelLastReadMessageID(channelID);
+        if (!lastReadMessageID)
+            return 0;
+
         let count = 0;
 
         await firebase.database().ref(`messages/${channelID}`).orderByKey()
@@ -347,6 +352,34 @@ let DB = {
     async addLastReadChangedListener(chatID, callback) {
         firebase.database().ref(`chats/${chatID}/members`)
         .on("child_changed", callback);
+    },
+
+    async addConnectionStateListener(callback) {
+        firebase.database().ref('.info/connected').on('value', callback);
+    },
+
+    async getConnentionState(uid) {
+        await firebase.database().ref(`users/${uid}/connection`).on("value", 
+        async (snapshot) => {
+            if (uid === Utils.parseUrl().id) {
+                if (snapshot.val().isConnected === true) {
+                    document.getElementById("connState").innerHTML = "online";
+                } else {
+                    document.getElementById("connState").innerHTML = 
+                    "last seen: " + Utils.toTimeString(new Date(snapshot.val().lastOnline));
+                }
+            }
+        });
+    },
+
+    async getLastOnline(uid) {
+        let lastOnline = null;
+
+        await firebase.database().ref(`users/${uid}/lastOnline`).once("value", function(snapshot) {
+            lastOnline = snapshot.val();
+        });
+
+        return Utils.toTimeString(new Date(lastOnline));
     }
 };
  

@@ -125,7 +125,7 @@ let DialogList = {
             Auth.currentUserID()) {
                 Chat.removeMessageStatusIcons();
 
-                let dialogInfoIcon = document.querySelector(`#${userID} .dialog-info:nth-of-type(2) i`);
+                let dialogInfoIcon = document.querySelector(`li[id="${userID}"] .dialog-info:nth-of-type(2) i`);
                 if (dialogInfoIcon)
                     dialogInfoIcon.remove();
 
@@ -135,7 +135,7 @@ let DialogList = {
             // send new message
             if (await DB.getMessageSender(chatID, snapshot.val()) ===
             Auth.currentUserID()) {
-                let dialogInfo = document.querySelector(`#${userID} .dialog-info:nth-of-type(2)`);
+                let dialogInfo = document.querySelector(`li[id="${userID}"] .dialog-info:nth-of-type(2)`);
 
                 let unreadCountIcon = document.createElement("i");
                 unreadCountIcon.classList.add("fa", "fa-circle");
@@ -154,14 +154,14 @@ let DialogList = {
             // read new messages
             if (snapshot.key === Auth.currentUserID() && 
             chatLastMsgID === userLastRead) {
-                let unreadCount = document.querySelector(`#${userID} .dialog-info:nth-of-type(2) p`);
+                let unreadCount = document.querySelector(`li[id=${userID}] .dialog-info:nth-of-type(2) p`);
                 if(unreadCount)
                     unreadCount.remove();
             }
 
             // get new message
             if (snapshot.key !== Auth.currentUserID() && chatLastMsgID !== userLastRead) {
-                let dialogInfo = document.querySelector(`#${userID} .dialog-info:nth-of-type(2)`);
+                let dialogInfo = document.querySelector(`li[id="${userID}"] .dialog-info:nth-of-type(2)`);
 
                 let unreadCountIcon = document.createElement("p");
                 unreadCountIcon.classList.add("unread");
@@ -266,8 +266,8 @@ function addDialogClickEventListener(el) {
         activeDialog = el;
         el.classList.add("active");
 
-        const photoURL = document.querySelector(`#${el.id} .avatar`).src;
-        const name = document.querySelector(`#${el.id} .username`).innerHTML;
+        const photoURL = document.querySelector(`li[id="${el.id}"] .avatar`).src;
+        const name = document.querySelector(`li[id="${el.id}"] .username`).innerHTML;
         Chat.setChatInfo({photoURL, name});
 
         if (await DB.isUserID(el.id))
@@ -286,12 +286,12 @@ function addDialogsClickEventListener(id) {
 }
 
 function updateDialogLastMessage(userID, message) {
-    let lastMessageContent = document.querySelector(`#${userID} p[class^=last-msg]`);
+    let lastMessageContent = document.querySelector(`li[id="${userID}"] p[class^=last-msg]`);
     lastMessageContent.innerHTML = message.content;
     lastMessageContent.className = (message.sender === Auth.currentUserID()) ? "last-msg-out" :
     "last-msg-in";
 
-    let lastMessageTime = document.querySelector(`#${userID} time`);
+    let lastMessageTime = document.querySelector(`li[id="${userID}"] time`);
     const timestamp = new Date(message.timestamp);
     lastMessageTime.dateTime = timestamp.toISOString();
     lastMessageTime.innerHTML = Utils.toTimeString(timestamp);

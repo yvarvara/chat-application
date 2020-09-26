@@ -4,12 +4,13 @@ import Register from "./views/pages/register.js"
 import Login from "./views/pages/login.js"
 import Home from "./views/pages/home.js"
 import Chat from "./views/components/chat.js"
+import Auth from "./services/auth.js"
+import DB from "./services/db.js"
 
 const routes = {
     "/" : Home,
     "/login" : Login,
     "/register" : Register,
-    // "/chats/:id" : Chat,
     "/channels/:id" : Chat,
     "/users/:id" : Chat
 };

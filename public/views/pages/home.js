@@ -3,6 +3,7 @@ import Header from "../components/header.js";
 import DialogList from "../components/dialogList.js"
 import Chat from "../components/chat.js"
 import DB from "../../services/db.js"
+import Auth from "../../services/auth.js"
 
 let Home = {
     render : async () => {
@@ -23,6 +24,22 @@ let Home = {
     },
 
     afterRender : async () => {
+        DB.addConnectionStateListener(async function(snapshot) {
+            let uid = Auth.currentUserID();
+            if (snapshot.val() && uid) {
+                let updates = {};
+
+                let con = firebase.database().ref(`users/${uid}/connection/isConnected`);
+                con.onDisconnect().set(false).then(() => {
+                    con.set(true);
+                });
+    
+                firebase.database().ref(`users/${uid}/connection/lastOnline`).onDisconnect()
+                .set(firebase.database.ServerValue.TIMESTAMP);
+            }
+        });
+
+        
         firebase.auth().onAuthStateChanged(async function(user) {
             if (user) {
                 const headerContainer = document.querySelector("header");
