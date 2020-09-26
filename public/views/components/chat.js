@@ -6,7 +6,8 @@ let request = null;
 let chatID = null;
 let chat = null;
 let messages = null;
-let chatHistory = null
+let chatHistory = null;
+let chatExists = false;
 
 let Chat = {
     render : async () => {
@@ -16,11 +17,16 @@ let Chat = {
         }
 
         let chatMessages = "";
+        chatID = request.id;
 
-        if (request.resource === "chats") {
-            chatID = Utils.parseUrl().id;
+        if (request.resource === "users") {
+            chatExists = await DB.isUserInCurrentUserChats(chatID);
+            chatID = Utils.getTwoUsersChatID(chatID, Auth.currentUserID());
+        } else if (request.resource === "channels") {
+            chatExists = await DB.isChannelInCurrentUserChats(chatID);
+        }
 
-            // chat = await DB.getChatInfoById(chatID);
+        if (chatExists) {
             messages = await DB.getMessages(chatID);
             const uid = Auth.currentUserID();
 
@@ -49,7 +55,6 @@ let Chat = {
                 chatMessages = messageHTML + '\n' + chatMessages;
             }
         }
-
 
         return /*html*/`
         <div class="chat-header">
@@ -89,10 +94,12 @@ let Chat = {
             if (messageContent) {
                 newMessageField.innerHTML = "";
 
-                if (request.resource === "users") {
-                    chatID = await DB.addChat(request.id, Auth.currentUserID());
-                } else if (request.resource === "channels") {
-                    await DB.addChannelMember(Auth.currentUserID(), request.id);
+                if (!chatExists) {
+                    if (request.resource === "users") {
+                        await DB.addChat(request.id, Auth.currentUserID());
+                    } else if (request.resource === "channels") {
+                        await DB.addChannelMember(Auth.currentUserID(), chatID);
+                    }
                 }
 
                 const timestamp = new Date();
@@ -101,7 +108,7 @@ let Chat = {
                 DB.addMessage(msgRef, chatID, Auth.currentUserID(), messageContent, timestamp.getTime())
                 .then((snap) => {
                     let i = document.querySelector(`#${snap} i.fa-clock-o`);
-                    if (i)
+                    if (i) 
                         i.className = "fa fa-circle";
                 });
 
@@ -123,10 +130,14 @@ let Chat = {
 
         if (chatID) {
             const message = await DB.getChatLastMessage(chatID);
-            await DB.updateLastReadMessage(chatID, message);
 
-            let peer = await DB.getChatPeerID(chatID);
-            let count = await DB.getUnreadMessagesCount(chatID, peer);
+            if (message)
+                await DB.updateLastReadMessage(chatID, message);
+
+            let count = (request.resource === "users") ? 
+            await DB.getUnreadMessagesCount(chatID, request.id) : 
+            await DB.getUnreadMessagesCountChannel(chatID);
+
             Chat.addMessageStatusIcons(count);
         }
     },

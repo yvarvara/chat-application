@@ -9,7 +9,7 @@ const routes = {
     "/" : Home,
     "/login" : Login,
     "/register" : Register,
-    "/chats/:id" : Chat,
+    // "/chats/:id" : Chat,
     "/channels/:id" : Chat,
     "/users/:id" : Chat
 };

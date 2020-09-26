@@ -1,4 +1,5 @@
 import Auth from "./auth.js"
+import Utils from "./utils.js"
 
 let DB = {
     async addUser(uid, username, email) {
@@ -86,6 +87,17 @@ let DB = {
         return userChatsIDs;
     },
 
+    async isUserID(uid) {
+        let res = false;
+
+        await firebase.database().ref(`users/${uid}`).once("value", function(snapshot) {
+            if (snapshot.val())
+                res = true;
+        })
+
+        return res;
+    },
+
     async addUserChatsChildAddedListener(callback) {
         firebase.database().ref(`users/${Auth.currentUserID()}/chats`)
         .on("child_added", callback);
@@ -115,7 +127,7 @@ let DB = {
     },
 
     async addChat(memberA, memberB) {
-        const chatID = (memberA > memberB) ? (memberA + memberB) : (memberB + memberA);
+        const chatID = Utils.getTwoUsersChatID(memberA, memberB);
         let updates = {};
 
         updates[`chats/${chatID}/members/${memberA}`] = "";
@@ -124,7 +136,6 @@ let DB = {
         updates[`users/${memberB}/chats/${chatID}`] = true
         
         await firebase.database().ref().update(updates);
-        return chatID;
     },
 
     async getChatInfoById(id) {
@@ -245,6 +256,9 @@ let DB = {
         
         await firebase.database().ref(`messages/${chatID}`).limitToLast(1)
         .once("value", function(snapshot) {
+            if (!snapshot.val())
+                return;
+
             message = Object.values(snapshot.val())[0];
             message.id = Object.keys(snapshot.val())[0];
         });
@@ -304,22 +318,35 @@ let DB = {
         return count;
     },
 
+    async getChannelLastReadMessageID(channelID) {
+        let lastReadMessageID = "";
+ 
+        await firebase.database().ref(`chats/${channelID}/members`).orderByValue()
+        .limitToLast(2).once("value", function(snapshot) {
+            lastReadMessageID = Object.values(snapshot.val())[0];
+        })
+
+        return lastReadMessageID;
+    },
+
+    async getUnreadMessagesCountChannel(channelID) {
+        let lastReadMessageID = await this.getChannelLastReadMessageID(channelID);
+        let count = 0;
+
+        await firebase.database().ref(`messages/${channelID}`).orderByKey()
+        .startAt(lastReadMessageID).once("value").then(function(snapshot) {
+            snapshot.forEach(function(s) {
+                if (s.key !== lastReadMessageID)
+                    count++;
+            })
+        });
+
+        return count;
+    },
+
     async addLastReadChangedListener(chatID, callback) {
         firebase.database().ref(`chats/${chatID}/members`)
         .on("child_changed", callback);
-    },
-
-    async getChatPeerID(chatID) {
-        let chatPeerID = null;
-
-        await firebase.database().ref(`chats/${chatID}/members`).once("value", function(snapshot) {
-            snapshot.forEach(s => {
-                if (s.key !== Auth.currentUserID())
-                    chatPeerID = s.key;
-            })
-        })
-
-        return chatPeerID;
     }
 };
  

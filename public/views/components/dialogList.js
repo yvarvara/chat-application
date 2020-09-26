@@ -45,36 +45,61 @@ let DialogList = {
 
         chatsList.push(chatInfo);
 
+        const userID = Utils.getChatPeerID(chatInfo.id);
+
         let chat = document.createElement("li");
         chat.classList.add("dialog");
-        chat.id = chatInfo.id;
+        chat.id = userID;
 
         const message = chatInfo.lastMessage;
 
-        const timestamp = new Date(message.timestamp);
-        const className = (message.sender === Auth.currentUserID()) ? 
-        "last-msg-out" : "last-msg-in";
+        if (message) {
+            const timestamp = new Date(message.timestamp);
+            const className = (message.sender === Auth.currentUserID()) ? 
+            "last-msg-out" : "last-msg-in";
+    
+            let unread = ""; 
+            if (message.sender === Auth.currentUserID()) {
+                if ((userID !== chatInfo.id && await DB.getUnreadMessagesCount(chatInfo.id, userID) > 0) || 
+                (userID === chatInfo.id && await DB.getUnreadMessagesCountChannel(userID) > 0))
+                    unread = `<i class="fa fa-circle"></i>`
+            } else {
+                let count = await DB.getUnreadMessagesCount(chatInfo.id, Auth.currentUserID());
+                if (count > 0)
+                    unread = `<p class="unread">${count}</p>`; 
+            }
 
-        const count = await DB.getUnreadMessagesCount(chat.id, Auth.currentUserID());
-        const p = count > 0 ? `<p class="unread">${count}</p>` : "";
-
-        chat.innerHTML = `
-            <img class="avatar" src="${chatInfo.photoURL}" alt="Avatar">
-            <div class="dialog-info">
-                <p class="username">${chatInfo.name}</p>
-                <p class="${className}">${message.content}</p>
-            </div>
-            <div class="dialog-info">
-                <time datetime="${timestamp.toISOString()}">${Utils.toTimeString(timestamp)}</time>
-                ${p}
-            </div>
-            `;
+            chat.innerHTML = `
+                <img class="avatar" src="${chatInfo.photoURL}" alt="Avatar">
+                <div class="dialog-info">
+                    <p class="username">${chatInfo.name}</p>
+                    <p class="${className}">${message.content}</p>
+                </div>
+                <div class="dialog-info">
+                    <time datetime="${timestamp.toISOString()}">${Utils.toTimeString(timestamp)}</time>
+                    ${unread}
+                </div>
+                `;
+        } else {
+            chat.innerHTML = `
+                <img class="avatar" src="${chatInfo.photoURL}" alt="Avatar">
+                <div class="dialog-info">
+                    <p class="username">${chatInfo.name}</p>
+                    <p class="last-msg"></p>
+                </div>
+                <div class="dialog-info">
+                    <time></time>
+                </div>
+                `;
+        }
 
         dialogList.prepend(chat);
     },
 
     afterNewChatRender: async(chatID) => {
-        const dialog = document.getElementById(chatID);
+        const userID = Utils.getChatPeerID(chatID);
+
+        const dialog = document.getElementById(userID);
         addDialogClickEventListener(dialog);
 
         await DB.addChatMessagesChildAddedListener(chatID, async (snapshot) => {         
@@ -82,28 +107,46 @@ let DialogList = {
             message.id = snapshot.key;
 
             // get new message while dialog active
-            if (activeDialog && activeDialog.id === chatID
+            if (activeDialog && activeDialog.id === userID
             && message.sender !== Auth.currentUserID()) {
                 await Chat.renderNewMessage(message);
                 await DB.updateLastReadMessage(chatID, message);
             }
 
-            updateDialogLastMessage(chatID, message);
+            updateDialogLastMessage(userID, message);
             dialogList.prepend(dialog);
         });
 
         await DB.addLastReadChangedListener(chatID, async (snapshot) => {
-            if (activeDialog && activeDialog.id === chatID
+            // my messages read
+            if (activeDialog && activeDialog.id === userID
             && snapshot.key !== Auth.currentUserID()
             && await DB.getMessageSender(chatID, snapshot.val()) ===
             Auth.currentUserID()) {
                 Chat.removeMessageStatusIcons();
+
+                let dialogInfoIcon = document.querySelector(`#${userID} .dialog-info:nth-of-type(2) i`);
+                if (dialogInfoIcon)
+                    dialogInfoIcon.remove();
+
                 return;
             }
 
+            // send new message
             if (await DB.getMessageSender(chatID, snapshot.val()) ===
-            Auth.currentUserID())
+            Auth.currentUserID()) {
+                let dialogInfo = document.querySelector(`#${userID} .dialog-info:nth-of-type(2)`);
+
+                let unreadCountIcon = document.createElement("i");
+                unreadCountIcon.classList.add("fa", "fa-circle");
+
+                if (dialogInfo.children.length > 1)
+                    dialogInfo.children[1].remove(); 
+                
+                dialogInfo.append(unreadCountIcon);
+
                 return;
+            }
 
             let chatLastMsgID = (await DB.getChatLastMessage(chatID)).id;
             let userLastRead = await DB.getUserLastReadMessageID(chatID, Auth.currentUserID());
@@ -111,18 +154,17 @@ let DialogList = {
             // read new messages
             if (snapshot.key === Auth.currentUserID() && 
             chatLastMsgID === userLastRead) {
-                let unreadCount = document.querySelector(`#${chatID} .dialog-info:nth-of-type(2) p`);
+                let unreadCount = document.querySelector(`#${userID} .dialog-info:nth-of-type(2) p`);
                 if(unreadCount)
                     unreadCount.remove();
             }
 
             // get new message
             if (snapshot.key !== Auth.currentUserID() && chatLastMsgID !== userLastRead) {
-                let dialogInfo = document.querySelector(`#${chatID} .dialog-info:nth-of-type(2)`);
+                let dialogInfo = document.querySelector(`#${userID} .dialog-info:nth-of-type(2)`);
 
                 let unreadCountIcon = document.createElement("p");
                 unreadCountIcon.classList.add("unread");
-
                 unreadCountIcon.innerHTML = await DB.getUnreadMessagesCount(chatID, Auth.currentUserID());
 
                 if (dialogInfo.children.length > 1)
@@ -157,18 +199,25 @@ function addSearchInputEventListener() {
         if (event.target.value) {
             searchResultDialogs.innerHTML = 
                 (chats.length > 0) ?
-                chats.map(chat => 
-                    `<li id="${chat.id}" class="dialog">
-                        <img class="avatar" src="${chat.photoURL}" alt="Avatar">
-                        <div class="dialog-info">
-                            <p class="username">${chat.name}</p>
-                            <p class="last-msg-out">ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</p>
-                        </div>
-                        <div class="dialog-info">
-                            <time datetime="2020-07-24T15:44:00">15:44</time>
-                        </div>
-                    </li>`
-                ).join('\n') : "";
+                chats.map((chat) => {
+                    const message = chat.lastMessage;
+                    const timestamp = new Date(message.timestamp);
+                    const className = (message.sender === Auth.currentUserID()) ? 
+                    "last-msg-out" : "last-msg-in";
+
+                    return `<li id="${chat.id}" class="dialog">
+                                <img class="avatar" src="${chat.photoURL}" alt="Avatar">
+                                <div class="dialog-info">
+                                    <p class="username">${chat.name}</p>
+                                    <p class="${className}">${message.content}</p>
+                                </div>
+                                <div class="dialog-info">
+                                    <time datetime="${timestamp.toISOString()}">
+                                    ${Utils.toTimeString(timestamp)}
+                                    </time>
+                                </div>
+                            </li>`
+                }).join('\n') : "";
 
             addDialogsClickEventListener("searchResultDialogs");
 
@@ -210,7 +259,7 @@ function addSearchInputEventListener() {
 }
 
 function addDialogClickEventListener(el) {
-    el.addEventListener("click", () => {
+    el.addEventListener("click", async () => {
         if (activeDialog)
             activeDialog.classList.remove("active");
 
@@ -221,16 +270,10 @@ function addDialogClickEventListener(el) {
         const name = document.querySelector(`#${el.id} .username`).innerHTML;
         Chat.setChatInfo({photoURL, name});
 
-        switch (el.parentNode.id) {
-            case "searchResultChannels":
-                window.location.href = `#/channels/${el.id}`;
-                break;
-            case "searchResultUsers":
-                window.location.href = `#/users/${el.id}`;
-                break;
-            default:
-                window.location.href = `#/chats/${el.id}`;
-        }
+        if (await DB.isUserID(el.id))
+            window.location.href = `#/users/${el.id}`
+        else
+            window.location.href = `#/channels/${el.id}`;
     });
 }
 
@@ -242,13 +285,13 @@ function addDialogsClickEventListener(id) {
     }
 }
 
-function updateDialogLastMessage(chatID, message) {
-    let lastMessageContent = document.querySelector(`#${chatID} p[class^=last-msg]`);
+function updateDialogLastMessage(userID, message) {
+    let lastMessageContent = document.querySelector(`#${userID} p[class^=last-msg]`);
     lastMessageContent.innerHTML = message.content;
     lastMessageContent.className = (message.sender === Auth.currentUserID()) ? "last-msg-out" :
     "last-msg-in";
 
-    let lastMessageTime = document.querySelector(`#${chatID} time`);
+    let lastMessageTime = document.querySelector(`#${userID} time`);
     const timestamp = new Date(message.timestamp);
     lastMessageTime.dateTime = timestamp.toISOString();
     lastMessageTime.innerHTML = Utils.toTimeString(timestamp);
