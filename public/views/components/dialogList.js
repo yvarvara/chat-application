@@ -260,7 +260,7 @@ function addDialogClickEventListener(el) {
         let chatID = (isUser) ? Utils.getTwoUsersChatID(el.id, Auth.currentUserID()) : el.id;
 
         let chat = await DB.getChatInfoById(chatID);
-        if (chat.password) {
+        if (chat && chat.password) {
             let password = prompt("Enter chat password");
             
             if (!password)
@@ -274,7 +274,17 @@ function addDialogClickEventListener(el) {
 
         const photoURL = document.querySelector(`li[id="${el.id}"] .avatar`).src;
         const name = document.querySelector(`li[id="${el.id}"] .username`).innerHTML;
-        Chat.setChatInfo({photoURL, name});
+
+        if (window.matchMedia("(max-width: 600px)").matches) {
+            document.getElementsByClassName("chat-not-selected")[0].remove();
+            document.getElementsByClassName("dialog-list-container")[0].style.display = "none";
+            document.getElementsByClassName("chat-container")[0].style.cssText = 
+                `background-color: var(--color-primary-light);
+                flex: 1;
+                width: 100%;
+                display: flex;
+                flex-direction: column;`
+        }
 
         if (isUser)
             window.location.href = `#/users/${el.id}`

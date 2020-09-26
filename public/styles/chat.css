@@ -265,6 +265,10 @@ input[type="search"] {
     background-color: var(--color-primary-light);
 }
 
+.chat-history p {
+    align-self: center;
+}
+
 .chat-footer {
     max-height: 200px;
     padding: 5px 10px;
@@ -458,10 +462,6 @@ input:checked + label:after {
 #profilePhotoFile {
     width: 0px;
     height: 0px;
-}
-
-@media only screen and (min-width: 400px) {
-
 }
 
 @media only screen and (min-width: 600px) {

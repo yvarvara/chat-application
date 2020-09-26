@@ -305,7 +305,7 @@ let DB = {
 
     async getUnreadMessagesCount(chatID, uid) {
         let lastReadMessageID = await this.getUserLastReadMessageID(chatID, uid);
-        if (!lastReadMessageID)
+        if (!lastReadMessageID && lastReadMessageID != "")
             return 0;
 
         let count = 0;
@@ -333,7 +333,7 @@ let DB = {
 
     async getUnreadMessagesCountChannel(channelID) {
         let lastReadMessageID = await this.getChannelLastReadMessageID(channelID);
-        if (!lastReadMessageID)
+        if (!lastReadMessageID && lastReadMessageID != "")
             return 0;
 
         let count = 0;

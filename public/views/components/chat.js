@@ -4,7 +4,6 @@ import Auth from "../../services/auth.js";
 
 let request = null;
 let chatID = null;
-let chat = null;
 let messages = null;
 let chatHistory = null;
 let chatExists = false;
@@ -16,7 +15,6 @@ let Chat = {
             return `<p class="chat-not-selected">Select a chat</p>`
         }
 
-        let chatMessages = "";
         chatID = request.id;
 
         if (request.resource === "users") {
@@ -26,43 +24,13 @@ let Chat = {
             chatExists = await DB.isChannelInCurrentUserChats(chatID);
         }
 
-        if (chatExists) {
-            messages = await DB.getMessages(chatID);
-            const uid = Auth.currentUserID();
-
-            for (let id in messages) {
-                const content = messages[id].content;
-                const timestamp = new Date(messages[id].timestamp);
-                const time = Utils.toTimeString(timestamp);
-                const datetime = timestamp.toISOString();
-                
-                const senderName = (await DB.getUserInfo(messages[id].sender)).displayName;
-
-                const messageHTML = (messages[id].sender === uid) ?
-                `<li class="msg msg-out">
-                    <div>
-                        <time datetime="${datetime}">
-                            ${time}
-                        </time>
-                        <p>${content}</p>
-                    </div>
-                </li>` : (request.resource === "channels") ?
-                `<li class="msg msg-in">
-                    <p class="sender">${senderName}</p>
-                    <time datetime="${datetime}">
-                        ${time}
-                    </time>
-                    <p>${content}</p>
-                </li>` :
-                `<li class="msg msg-in">
-                    <time datetime="${datetime}">
-                        ${time}
-                    </time>
-                    <p>${content}</p>
-                </li>`;
-    
-                chatMessages = messageHTML + '\n' + chatMessages;
-            }
+        let chat = null;
+        if (request.resource === "channels" || chatExists) {
+            chat = await DB.getChatInfoById(chatID);
+        }
+        else {
+            chat = await DB.getUserInfo(request.id);
+            chat.name = chat.displayName;
         }
 
         return /*html*/`
@@ -75,7 +43,6 @@ let Chat = {
             <!-- <button class="icon-btn"><i class="fa fa-info-circle fa-2x"></i></button> -->
         </div>
         <ul class="chat-history">
-            ${chatMessages}
         </ul>
         <div class="chat-footer">
             <form name="newMessage">
@@ -88,7 +55,10 @@ let Chat = {
     },
 
     afterRender : async () => {
-        chatHistory = document.querySelector(".chat-history");
+        chatHistory = await document.querySelector(".chat-history");
+
+        if (chatHistory)
+            await Chat.renderMesages();
 
         const newMessageForm = document.forms.newMessage;
         if (!newMessageForm)
@@ -154,6 +124,53 @@ let Chat = {
         }
     },
 
+    renderMesages: async () => {
+        let chatMessages = "";
+
+        if (request.resource === "channels" || chatExists) {
+            messages = await DB.getMessages(chatID);
+            const uid = Auth.currentUserID();
+
+            chatHistory.innerHTML = `<p>loading...</p>`;
+
+            for (let id in messages) {
+                const content = messages[id].content;
+                const timestamp = new Date(messages[id].timestamp);
+                const time = Utils.toTimeString(timestamp);
+                const datetime = timestamp.toISOString();
+                
+                const senderName = (await DB.getUserInfo(messages[id].sender)).displayName;
+
+                const messageHTML = (messages[id].sender === uid) ?
+                `<li class="msg msg-out">
+                    <div>
+                        <time datetime="${datetime}">
+                            ${time}
+                        </time>
+                        <p>${content}</p>
+                    </div>
+                </li>` : (request.resource === "channels") ?
+                `<li class="msg msg-in">
+                    <p class="sender">${senderName}</p>
+                    <time datetime="${datetime}">
+                        ${time}
+                    </time>
+                    <p>${content}</p>
+                </li>` :
+                `<li class="msg msg-in">
+                    <time datetime="${datetime}">
+                        ${time}
+                    </time>
+                    <p>${content}</p>
+                </li>`;
+    
+                chatMessages = messageHTML + '\n' + chatMessages;
+            }
+        }
+
+        chatHistory.innerHTML = chatMessages;
+    },
+
     renderNewMessage: async (msg) => {
         if (!chatHistory)
             return;
@@ -170,18 +187,18 @@ let Chat = {
             </time>
             <p>${msg.content}</p>` :
             `<p class="sender">${senderName}</p>
-            <time datetime="${datetime}">
-                ${time}
+            <time datetime="${timestamp.toISOString()}">
+            ${Utils.toTimeString(timestamp)}
             </time>
-            <p>${content}</p>
+            <p>${msg.content}</p>
         `;
 
         chatHistory.prepend(message);
     },
     
-    setChatInfo: (chatInfo) => {
-        chat = chatInfo;
-    },
+    // setChatInfo: (chatInfo) => {
+    //     chat = chatInfo;
+    // },
 
     addMessageStatusIcons: (count) => {
         let icon = document.createElement("i");
