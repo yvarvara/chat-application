@@ -33,6 +33,16 @@ let SettingsModal = {
     },
 
     afterRender : async () => {
+        const toggleSwitch = document.querySelector('.toggle-switch input[type="checkbox"]');
+        const currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : null;
+        if (currentTheme && currentTheme === "dark") {
+            toggleSwitch.checked = true;
+        }
+
+        toggleSwitch.addEventListener("change", (e) => {
+            document.documentElement.classList.toggle("dark-mode");
+        });
+
         const uid = Auth.currentUserID();
         const user = await DB.getUserInfo(uid);
 

@@ -4,8 +4,6 @@ import Register from "./views/pages/register.js"
 import Login from "./views/pages/login.js"
 import Home from "./views/pages/home.js"
 import Chat from "./views/components/chat.js"
-import Auth from "./services/auth.js"
-import DB from "./services/db.js"
 
 const routes = {
     "/" : Home,
@@ -14,6 +12,14 @@ const routes = {
     "/channels/:id" : Chat,
     "/users/:id" : Chat
 };
+
+const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+if (prefersDarkScheme.matches) {
+    document.documentElement.classList.toggle("dark-mode");
+    localStorage.setItem("theme", "dark"); 
+} else {
+    localStorage.setItem("theme", "light");
+}
 
 const router = async () => {
     let content = document.getElementById("pageContent");
