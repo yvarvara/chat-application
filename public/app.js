@@ -29,10 +29,20 @@ const router = async () => {
 
     let page = routes[parsedURL] ? routes[parsedURL] : Error404;
 
-    const chatContainer = document.querySelector(".chat-container");
-    if (chatContainer && page === Chat) 
-        content = chatContainer;
+    // const chatContainer = document.querySelector(".chat-container");
+    // if (chatContainer && page === Chat) {
+    //     content = chatContainer;
+    // }
     
+    // await Utils.render(content, page);
+
+    if (page === Chat) {
+        if (!document.getElementById("dialogList")) {
+            await Utils.render(content, Home);
+        }
+        const chatContainer = document.querySelector(".chat-container");
+        content = chatContainer;
+    }
     await Utils.render(content, page);
 }
 
